@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { Content, Page } from '@backstage/core-components';
 import { Box, Button, TextField, Typography } from '@mui/material';
-import 'react-quill/dist/quill.snow.css';
-import ReactQuill from 'react-quill';
+// import 'react-quill/dist/quill.snow.css';
+// import ReactQuill from 'react-quill';
 import ExpertUserAutoComplete from './ExpertUserAutoComplete';
+import MDEditor from '@uiw/react-md-editor';
+import rehypeSanitize from 'rehype-sanitize';
 
 export const FeedMePage = () => {
   const [value, setValue] = useState('');
@@ -33,11 +35,23 @@ export const FeedMePage = () => {
             Answer the question in detail:
           </Typography>
 
-          <ReactQuill
+          {/* <ReactQuill
             theme="snow"
             value={value}
             onChange={setValue}
             style={{ height: '200px', color: 'white' }}
+          /> */}
+
+          <MDEditor
+            value={value}
+            onChange={val => setValue(val ?? '')}
+            previewOptions={{
+              rehypePlugins: [[rehypeSanitize]],
+            }}
+          />
+          <MDEditor.Markdown
+            source={value}
+            style={{ whiteSpace: 'pre-wrap' }}
           />
         </Box>
 
