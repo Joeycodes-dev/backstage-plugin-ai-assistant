@@ -36,22 +36,47 @@ interface ExpertUserAutoCompleteProps {
   onChange: (value: ExpertType | null) => void;
 }
 
+function getUniqueExpertsByDisplayName(
+  experts: readonly ExpertType[],
+): ExpertType[] {
+  const seen = new Set<string>();
+  return experts.filter(expert => {
+    const name = expert.user.displayName;
+    if (seen.has(name)) return false;
+    seen.add(name);
+    return true;
+  });
+}
+
 export default function ExpertUserAutoComplete({
   value,
   onChange,
 }: ExpertUserAutoCompleteProps) {
+  const uniqueExperts = getUniqueExpertsByDisplayName(experts);
   return (
     <Autocomplete
       sx={{ width: 500 }}
-      options={experts}
+      options={uniqueExperts}
       autoHighlight
       getOptionLabel={option => option.user.displayName}
       value={value}
       onChange={(_event, newValue) => onChange(newValue)}
+      filterOptions={(options, { inputValue }) => {
+        const search = inputValue.trim().toLowerCase();
+        return options.filter(option => {
+          const name = option.user.displayName.toLowerCase();
+          const email = (option.user.email || '').toLowerCase();
+          return name.includes(search) || email.includes(search);
+        });
+      }}
       renderOption={(props, option) => {
         const { key, ...optionProps } = props;
         return (
-          <Box key={key} component="li" {...optionProps}>
+          <Box
+            key={`${option.user.email || ''}-${option.user.displayName}`}
+            component="li"
+            {...optionProps}
+          >
             {option.user.displayName}
             {option.user.email ? ` (${option.user.email})` : ''}
           </Box>
@@ -416,19 +441,6 @@ const experts: readonly ExpertType[] = [
     user: {
       displayName: 'Sean Henderson',
       email: 'Sean.Henderson@Nintex.com',
-    },
-  },
-  {
-    // kind: 'User',
-    metadata: {
-      name: 'Ruan',
-      title: 'Senior Engineer',
-      area: 'Cloud',
-      subArea: 'SmartObjects',
-    },
-    user: {
-      displayName: 'Ruan Grobler',
-      email: 'Ruan.Grobler@Nintex.com',
     },
   },
   {
@@ -1143,7 +1155,7 @@ const experts: readonly ExpertType[] = [
     },
     user: {
       displayName: 'Kieran Armstrong',
-      email: 'Stefan.Nolte@Nintex.com',
+      email: 'kieran.Armstrong@Nintex.com',
     },
   },
   {
