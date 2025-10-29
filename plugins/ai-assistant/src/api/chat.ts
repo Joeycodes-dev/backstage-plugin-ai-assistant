@@ -20,6 +20,7 @@ export type ChatApi = {
     conversationId: string;
   }>;
   getConversations: () => Promise<Conversation[]>;
+  triggerIngestion: (ingestorId?: string) => Promise<{ message: string }>;
 };
 
 type ChatApiOptions = {
@@ -94,5 +95,27 @@ export const createChatService = ({
     return data.conversations as Conversation[];
   };
 
-  return { getModels, getConversation, sendMessage, getConversations };
+  const triggerIngestion: ChatApi['triggerIngestion'] = async (
+    ingestorId?: string,
+  ) => {
+    const assistantBaseUrl = await discoveryApi.getBaseUrl('ai-assistant');
+    const response = await fetchApi.fetch(`${assistantBaseUrl}/ingest`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ ingestorId }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(
+        `Failed to trigger ingestion: ${error.error?.message ?? response.statusText}`,
+      );
+    }
+
+    return response.json();
+  };
+
+  return { getModels, getConversation, sendMessage, getConversations, triggerIngestion };
 };

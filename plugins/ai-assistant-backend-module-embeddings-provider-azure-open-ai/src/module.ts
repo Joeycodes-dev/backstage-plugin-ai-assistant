@@ -21,7 +21,7 @@ export const aiAssistantModuleEmbeddingsProviderAzureOpenAi =
             'aiAssistant.embeddings.azureOpenAi.deploymentName',
           );
 
-          const instanceName = config.getString(
+          const instanceName = config.getOptionalString(
             'aiAssistant.embeddings.azureOpenAi.instanceName',
           );
           const apiKey = config.getString(

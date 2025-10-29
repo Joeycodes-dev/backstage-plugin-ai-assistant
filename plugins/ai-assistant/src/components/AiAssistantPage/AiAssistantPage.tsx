@@ -19,6 +19,7 @@ import MenuIcon from '@mui/icons-material/Menu';
 import AddIcon from '@mui/icons-material/Add';
 import { useApi } from '@backstage/core-plugin-api';
 import { signalApiRef } from '@backstage/plugin-signals-react';
+import { FeedMeButton } from '../FeedMeButton';
 
 export const AiAssistantPage = () => {
   const chatApi = useApi(chatApiRef);
@@ -84,6 +85,7 @@ export const AiAssistantPage = () => {
         maxHeight="100vh"
         boxSizing="border-box"
       >
+        <FeedMeButton />
         <Stack direction="row" spacing={2} justifyContent="flex-end">
           <Tooltip title="New Chat">
             <IconButton onClick={openNewChat}>

@@ -18,7 +18,7 @@ backend:
       host: localhost
       port: 5432
       user: postgres
-      password: postgres
+      password: lol
 
   actions:
     pluginSources:
@@ -53,6 +53,8 @@ catalog:
       target: ../../catalog.local-dev.yaml
 
 aiAssistant:
+  wikibot:
+    folderPath: 'C:\\Users\\KutumeT\\Downloads\\test'
   storage:
     pgVector:
       chunkSize: 800
@@ -69,11 +71,11 @@ aiAssistant:
       apiKey: '<your-api-key>'
       baseUrl: '<your-base-url>'
     azureOpenAi:
-      deploymentName: '<your-deployment-name>'
-      instanceName: '<your-instance-name>'
-      apiKey: '<your-api-key>'
-      endpoint: '<your-azure-openai-endpoint>'
-      openAIApiVersion: <your-deployments-openai-version>
+      deploymentName: 'text-embedding-3-large'
+      instanceName: 'wikibots'
+      apiKey: lol
+      endpoint: https://wikibots.cognitiveservices.azure.com/openai/v1/
+      openAIApiVersion: '2024-04-01-preview'
 
   models:
     ollama:
@@ -82,10 +84,10 @@ aiAssistant:
       models:
         - '<your-model>'
     azureAi:
-      apiKey: <your-api-key>
+      apiKey: lol
       models:
-        - endpoint: <your-azure-ai-foundry-endpoint>
-          modelName: '<your-model>'
+        - endpoint: https://wikibots.cognitiveservices.azure.com/openai/v1/
+          modelName: 'gpt-5-mini'
 
 ingestors:
   # See ./plugins/ai-assistant-backend-module-ingestor-github/config.d.ts for more config options
@@ -94,7 +96,8 @@ ingestors:
     appId: <your-github-app-id>
     privateKey: <your-github-private-key>
     installationId: <your-github-installation-id>
-
+  wikibot:
+    folderPath: 'C:\\Users\\KutumeT\\Downloads\\test'
     # optional config to filter what to ingest
     # filesBatchSize: <number-of-files-to-process-in-batches> # default: 50
     # baseUrl: <your-github-enterprise-instance-url> # only needed for GitHub Enterprise
