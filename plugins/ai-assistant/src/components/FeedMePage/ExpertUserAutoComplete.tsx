@@ -10,23 +10,14 @@ interface UserMetadata {
   subArea: string;
 }
 
-// For the profile object inside user
-interface UserProfile {
-  // displayName: string;
-  // email?: string; // The email is sometimes missing, so it's marked as optional with '?'
-}
-
 // For the user object
 interface Useruser {
-  // profile: UserProfile;
   displayName: string;
   email?: string; // The email is sometimes missing, so it's marked as optional with '?'
 }
 
 // The main User interface, often called an "entity" in Backstage
 export interface ExpertType {
-  // apiVersion: 'backstage.io/v1alpha1';
-  // kind: 'User';
   metadata: UserMetadata;
   user: Useruser;
 }
@@ -97,6 +88,7 @@ export default function ExpertUserAutoComplete({
     />
   );
 }
+
 /**
  * Utility to get display name from ExpertType or null/undefined.
  */
@@ -105,6 +97,7 @@ export function getExpertDisplayName(
 ): string {
   return expert?.user.displayName ?? '';
 }
+
 const experts: readonly ExpertType[] = [
   {
     // kind: 'User',
