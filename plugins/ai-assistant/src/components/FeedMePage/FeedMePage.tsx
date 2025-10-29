@@ -3,12 +3,14 @@ import { Content, Page } from '@backstage/core-components';
 import { Box, Button, TextField, Typography } from '@mui/material';
 // import 'react-quill/dist/quill.snow.css';
 // import ReactQuill from 'react-quill';
-import ExpertUserAutoComplete from './ExpertUserAutoComplete';
+import ExpertUserAutoComplete, { ExpertType } from './ExpertUserAutoComplete';
 import MDEditor from '@uiw/react-md-editor';
 import rehypeSanitize from 'rehype-sanitize';
 
 export const FeedMePage = () => {
-  const [value, setValue] = useState('');
+  const [value, setValue] = useState(''); // Answer markdown
+  const [question, setQuestion] = useState(''); // Original question
+  const [approver, setApprover] = useState<ExpertType | null>(null); // Approver user
 
   return (
     <Page themeId="home">
@@ -27,6 +29,8 @@ export const FeedMePage = () => {
             label="Original Question asked?"
             variant="outlined"
             helperText="This helps Platty understand the context of your answer."
+            value={question}
+            onChange={e => setQuestion(e.target.value)}
           />
         </Box>
 
@@ -59,7 +63,7 @@ export const FeedMePage = () => {
           <Typography variant="body1" gutterBottom>
             Who should approve this answer?
           </Typography>
-          <ExpertUserAutoComplete />
+          <ExpertUserAutoComplete value={approver} onChange={setApprover} />
         </Box>
 
         <Box display="flex" justifyContent="flex-end" gap={2} mr={2} mb={2}>
