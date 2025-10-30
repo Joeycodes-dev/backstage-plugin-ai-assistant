@@ -125,18 +125,18 @@ const experts: readonly ExpertType[] = [
       email: 'Emile.Kimme@Nintex.com',
     },
   },
-  {
-    // kind: 'User',
-    metadata: {
-      name: 'Kilo Christo',
-      title: 'VP',
-      area: 'Hackathon',
-      subArea: 'Brownie Points',
-    },
-    user: {
-      displayName: 'Kilo Christo',
-    },
-  },
+  // {
+  //   // kind: 'User',
+  //   metadata: {
+  //     name: 'Kilo Christo',
+  //     title: 'VP',
+  //     area: 'Hackathon',
+  //     subArea: 'Brownie Points',
+  //   },
+  //   user: {
+  //     displayName: 'Kilo Christo',
+  //   },
+  // },
   {
     // kind: 'User',
     metadata: {
@@ -1346,18 +1346,18 @@ const experts: readonly ExpertType[] = [
       email: 'Calvin.Machete@Nintex.com',
     },
   },
-  {
-    // kind: 'User',
-    metadata: {
-      name: 'CloudOps',
-      title: 'Team',
-      area: 'Micros',
-      subArea: 'Tenant Management',
-    },
-    user: {
-      displayName: 'CloudOps',
-    },
-  },
+  // {
+  //   // kind: 'User',
+  //   metadata: {
+  //     name: 'CloudOps',
+  //     title: 'Team',
+  //     area: 'Micros',
+  //     subArea: 'Tenant Management',
+  //   },
+  //   user: {
+  //     displayName: 'CloudOps',
+  //   },
+  // },
   {
     // kind: 'User',
     metadata: {

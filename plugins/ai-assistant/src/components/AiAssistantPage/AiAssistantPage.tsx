@@ -17,7 +17,7 @@ import Typography from '@mui/material/Typography';
 
 import MenuIcon from '@mui/icons-material/Menu';
 import AddIcon from '@mui/icons-material/Add';
-import PlattyIcon from '@mui/icons-material/Adb';
+import PlattyIcon from '@mui/icons-material/Upload';
 import { useApi } from '@backstage/core-plugin-api';
 import { signalApiRef } from '@backstage/plugin-signals-react';
 

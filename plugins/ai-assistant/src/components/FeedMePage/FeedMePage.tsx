@@ -134,13 +134,13 @@ export const FeedMePage = () => {
           <Button variant="contained" color="success" onClick={handleApprove}>
             Approve
           </Button>
-          <Button
+          {/* <Button
             variant="outlined"
             color="info"
             onClick={backupSubmitToPostgres}
           >
             Backup to Postgres
-          </Button>
+          </Button> */}
         </Box>
       </Content>
     </Page>
