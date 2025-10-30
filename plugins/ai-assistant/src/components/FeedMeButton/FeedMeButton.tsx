@@ -7,7 +7,6 @@ import {
   Stack,
   CircularProgress,
   TextField,
-  Alert,
   IconButton,
   Tooltip,
   useTheme,
@@ -17,12 +16,10 @@ import CloseIcon from '@mui/icons-material/Close';
 import { useApi, errorApiRef, alertApiRef } from '@backstage/core-plugin-api';
 import { chatApiRef } from '../../api/chat';
 import { useAsyncFn } from 'react-use';
-import { Page, Content } from '@backstage/core-components';
+import { Content } from '@backstage/core-components';
 import MDEditor from '@uiw/react-md-editor';
 import rehypeSanitize from 'rehype-sanitize';
-import ExpertUserAutoComplete, {
-  ExpertType,
-} from '../FeedMePage/ExpertUserAutoComplete';
+import ExpertUserAutoComplete, { ExpertType } from './ExpertUserAutoComplete';
 
 const style = {
   position: 'fixed' as 'fixed',
@@ -318,7 +315,6 @@ export const FeedMeButton = () => {
               </Box>
             )}
           </Content>
-          {/* </Page> */}
         </Box>
       </Modal>
     </>
