@@ -5,9 +5,7 @@ import {
   DatabaseService,
   RootConfigService,
 } from '@backstage/backend-plugin-api';
-import {
-  type DataIngestionPipeline
-} from '@sweetoburrito/backstage-plugin-ai-assistant-node';
+import { type DataIngestionPipeline } from '@sweetoburrito/backstage-plugin-ai-assistant-node';
 import multer from 'multer';
 import mammoth from 'mammoth';
 import { Model } from '@sweetoburrito/backstage-plugin-ai-assistant-node';
@@ -48,12 +46,11 @@ export async function createWikibotRouter(
       }. Check logs for progress.`,
     });
   });
-  
+
   router.post(
     '/summarize',
     upload.single('transcript') as any,
     async (req, res) => {
-
       const summaryModelId =
         config.getOptionalString('aiAssistant.conversation.summaryModel') ??
         models[0]?.id;
@@ -68,7 +65,9 @@ export async function createWikibotRouter(
       const model = models.find(m => m.id === summaryModelId);
 
       if (!model) {
-        logger.error(`Configured summary model "${summaryModelId}" was not found.`);
+        logger.error(
+          `Configured summary model "${summaryModelId}" was not found.`,
+        );
         return res
           .status(500)
           .json({ message: `AI model "${summaryModelId}" not found.` });
@@ -134,9 +133,23 @@ export async function createWikibotRouter(
       })
       .returning('*');
 
+    res.status(201).json({ document: insertedDoc });
+  });
+
+  router.put('/documents', async (req, res) => {
+    const { id, approved } = req.body;
+
+    const db = await database.getClient();
+    const [updatedDoc] = await db('wikibot_documents')
+      .where({ id })
+      .update({
+        approved: !!approved,
+      })
+      .returning('*');
+
     if (approved) {
       logger.info(
-        `Document ${insertedDoc.id} was approved. Triggering wikibot ingestor.`,
+        `Document ${updatedDoc.id} was approved. Triggering wikibot ingestor.`,
       );
       // Trigger ingestion but don't wait for it to complete.
       dataIngestionTrigger('wikibot').catch(error => {
@@ -147,7 +160,7 @@ export async function createWikibotRouter(
       });
     }
 
-    res.status(201).json({ document: insertedDoc });
+    res.status(200).json({ document: updatedDoc });
   });
 
   return router;

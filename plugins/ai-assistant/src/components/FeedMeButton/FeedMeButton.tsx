@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   Button,
   Modal,
@@ -10,76 +10,130 @@ import {
   Alert,
   IconButton,
   Tooltip,
+  useTheme,
 } from '@mui/material';
 import UploadIcon from '@mui/icons-material/Upload';
+import CloseIcon from '@mui/icons-material/Close';
 import { useApi, errorApiRef, alertApiRef } from '@backstage/core-plugin-api';
 import { chatApiRef } from '../../api/chat';
 import { useAsyncFn } from 'react-use';
+import { Page, Content } from '@backstage/core-components';
+import MDEditor from '@uiw/react-md-editor';
+import rehypeSanitize from 'rehype-sanitize';
+import ExpertUserAutoComplete, {
+  ExpertType,
+} from '../FeedMePage/ExpertUserAutoComplete';
 
 const style = {
-  position: 'absolute' as 'absolute',
-  top: '50%',
-  left: '50%',
-  transform: 'translate(-50%, -50%)',
-  width: 1200,
+  position: 'fixed' as 'fixed',
+  top: 0,
+  left: 0,
+  width: '100vw',
+  height: '100vh',
   bgcolor: 'background.paper',
-  borderRadius: '4px',
+  borderRadius: 0,
   boxShadow: 24,
   p: 4,
+  overflow: 'auto',
+  zIndex: 1300,
 };
 
 export const FeedMeButton = () => {
+  const theme = useTheme();
   const [open, setOpen] = useState(false);
-  const [text, setText] = useState('');
+  const [answer, setAnswer] = useState(''); // Answer markdown
   const [file, setFile] = useState<File | null>(null);
-  const [expert, setExpert] = useState('');
-  const [summary, setSummary] = useState('');
-  const [step, setStep] = useState<'input' | 'review'>('input');
+  const [approver, setApprover] = useState<ExpertType | null>(null); // Approver user
+  const [approvalId, setApprovalId] = useState<number | null>(null);
+  const [originalQuestion, setOriginalQuestion] = useState(''); // Original question
+
+  const [submitted, setSubmitted] = useState(false);
 
   const chatApi = useApi(chatApiRef);
   const errorApi = useApi(errorApiRef);
   const alertApi = useApi(alertApiRef);
 
   const handleOpen = () => setOpen(true);
+
   const handleClose = useCallback(() => {
     setOpen(false);
     setTimeout(() => {
-      setStep('input');
-      setText('');
+      setAnswer('');
       setFile(null);
-      setExpert('');
-      setSummary('');
+      setApprover(null);
+      setOriginalQuestion('');
     }, 300);
   }, []);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files.length > 0) {
-      setFile(event.target.files[0]);
+      const selectedFile = event.target.files[0];
+      setFile(selectedFile);
     }
   };
 
   const [{ loading: summarizing }, generateSummary] = useAsyncFn(async () => {
     try {
       const result = await chatApi.summarizeContent({
-        text: file ? undefined : text,
+        text: file ? undefined : answer,
         file: file || undefined,
       });
-      setSummary(result.summary);
-      setStep('review');
+      setAnswer(result.summary);
     } catch (e: any) {
       errorApi.post(e);
     }
-  }, [chatApi, errorApi, text, file]);
+  }, [chatApi, errorApi, answer, file]);
 
-  const [{ loading: saving }, approveAndSave] = useAsyncFn(async () => {
+  // automatically generate summary when a file is uploaded.
+  useEffect(() => {
+    if (file) {
+      generateSummary();
+    }
+  }, [file]);
+
+  const [{ loading: submitting }, submitForApproval] = useAsyncFn(async () => {
     try {
-      await chatApi.addDocument({
-        content: summary,
-        expert: expert || undefined,
+      const data = await chatApi.addDocument({
+        content:
+          'Original question asked: ' +
+          originalQuestion +
+          '. Answer: ' +
+          answer,
+        expert:
+          (approver?.user.email ?? approver?.user.displayName) || undefined,
+        approved: false,
+      });
+
+      if (data && data.document && data.document.id) {
+        setApprovalId(data.document.id as number);
+      }
+
+      setSubmitted(true);
+
+      // Scroll to top of modal/page
+      if (typeof window !== 'undefined') {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+
+      alertApi.post({
+        message: 'Sent for approval :)',
+        severity: 'success',
+        display: 'transient',
+      });
+    } catch (e: any) {
+      errorApi.post(e);
+    }
+  }, [chatApi, errorApi, alertApi, handleClose, answer, approver]);
+
+  const [{ loading: approving }, approveSubmission] = useAsyncFn(async () => {
+    try {
+      await chatApi.updateDocument({
+        id: approvalId!,
         approved: true,
       });
+
       alertApi.post({
-        message: 'Approved content saved successfully!',
+        message: "Approved! This will now be fed into Platty's knowledge base.",
         severity: 'success',
         display: 'transient',
       });
@@ -88,92 +142,183 @@ export const FeedMeButton = () => {
     } finally {
       handleClose();
     }
-  }, [chatApi, errorApi, alertApi, handleClose, summary, expert]);
+  }, [chatApi, errorApi, alertApi, handleClose, answer, approver, approvalId]);
 
-  const canGenerateSummary = !summarizing && (text.trim() !== '' || file !== null);
+  const [{ loading: rejecting }, rejectSubmission] = useAsyncFn(async () => {
+    try {
+      await chatApi.updateDocument({
+        id: approvalId!,
+        approved: false,
+      });
+
+      alertApi.post({
+        message:
+          "Rejected content! This will not be fed into Platty's knowledge base.",
+        severity: 'warning',
+        display: 'transient',
+      });
+    } catch (e: any) {
+      errorApi.post(e);
+    } finally {
+      handleClose();
+    }
+  }, [chatApi, errorApi, alertApi, handleClose, answer, approver, approvalId]);
+
+  const canGenerateSummary =
+    !summarizing && (answer.trim() !== '' || file !== null);
 
   return (
     <>
-    <Tooltip title="Feed Me">
-      <IconButton
-        onClick={handleOpen}
-      >
-        <UploadIcon />
-      </IconButton>
+      <Tooltip title="Feed Me">
+        <IconButton onClick={handleOpen}>
+          <UploadIcon />
+        </IconButton>
       </Tooltip>
       <Modal open={open} onClose={handleClose}>
         <Box sx={style}>
-          {step === 'input' && (
-            <>
-              <Typography variant="h6" component="h2">
-                Feed the AI with your SOUL!!!
+          <Typography variant="h4" gutterBottom>
+            Feed Platty
+          </Typography>
+          <Typography variant="body1">
+            Provide input to help Platty learn and improve its responses.
+          </Typography>
+
+          <Box sx={{ position: 'absolute', top: 16, right: 16, zIndex: 1400 }}>
+            <IconButton aria-label="Close" onClick={handleClose} size="large">
+              <CloseIcon fontSize="large" />
+            </IconButton>
+          </Box>
+
+          <Content>
+            <Box mt={2} mb={3}>
+              <TextField
+                fullWidth
+                label="Original Question asked?"
+                variant="outlined"
+                helperText="This helps Platty understand the context of your answer."
+                value={originalQuestion}
+                onChange={e => setOriginalQuestion(e.target.value)}
+              />
+            </Box>
+
+            <Stack
+              direction="row"
+              spacing={2}
+              justifyContent="space-between"
+              alignItems="center"
+              sx={{ mt: 2, mb: 1 }}
+            >
+              <Typography variant="h6" gutterBottom>
+                Answer the question in detail:
               </Typography>
-              <TextField
-                label="Expert (Optional)"
-                fullWidth
-                variant="outlined"
-                value={expert}
-                onChange={e => setExpert(e.target.value)}
-                sx={{ mt: 2 }}
-              />
-              <TextField
-                label="Paste content here"
-                multiline
-                rows={6}
-                fullWidth
-                variant="outlined"
-                value={text}
-                onChange={e => setText(e.target.value)}
-                sx={{ mt: 2 }}
-                disabled={!!file}
-              />
-              <Typography sx={{ mt: 2, mb: 1, textAlign: 'center' }}>OR</Typography>
-              <Button variant="outlined" component="label" fullWidth disabled={text.trim() !== ''}>
-                Upload Transcript File
-                <input type="file" hidden accept=".docx,.vtt" onChange={handleFileChange} />
-              </Button>
-              {file && <Typography sx={{ mt: 1, fontStyle: 'italic' }}>Selected: {file.name}</Typography>}
-              <Stack direction="row" spacing={2} justifyContent="flex-end" sx={{ mt: 3 }}>
-                <Button onClick={handleClose} color="inherit">Cancel</Button>
-                <Button variant="contained" onClick={generateSummary} disabled={!canGenerateSummary} startIcon={summarizing && <CircularProgress size={20} />}>
-                  {summarizing ? 'Generating...' : 'Generate Summary'}
+
+              <Stack direction="row" spacing={2}>
+                <Button variant="outlined" component="label">
+                  Upload Transcript
+                  <input
+                    type="file"
+                    hidden
+                    accept=".docx,.vtt"
+                    onChange={handleFileChange}
+                  />
+                </Button>
+                <Button
+                  variant="contained"
+                  onClick={generateSummary}
+                  disabled={!canGenerateSummary}
+                  startIcon={summarizing && <CircularProgress size={20} />}
+                >
+                  {summarizing ? 'Generating Summary...' : 'Generate Summary'}
                 </Button>
               </Stack>
-            </>
-          )}
-          {step === 'review' && (
-            <>
-              <Typography variant="h6" component="h2">
-                Review Summary
+            </Stack>
+
+            <Box
+              mb={4}
+              sx={{
+                '& .w-md-editor': {
+                  height: '400px',
+                  maxHeight: '400px',
+                  minHeight: '400px',
+                },
+                '& .w-md-editor-text': {
+                  height: '100%',
+                  maxHeight: '100%',
+                  minHeight: '100%',
+                  overflowY: 'auto',
+                },
+              }}
+            >
+              <MDEditor
+                value={answer}
+                onChange={val => setAnswer(val ?? '')}
+                previewOptions={{
+                  rehypePlugins: [[rehypeSanitize]],
+                }}
+                highlightEnable={false}
+              />
+              {file && (
+                <Typography sx={{ mt: 1, fontStyle: 'italic' }}>
+                  Transcript summarized: {file.name}
+                </Typography>
+              )}
+            </Box>
+
+            <Box my={2}>
+              <Typography variant="body1" gutterBottom>
+                Who should approve this answer?
               </Typography>
-              <Alert severity="info" sx={{ my: 2 }}>
-                The AI has generated a summary. Please review and edit if necessary before approving.
-              </Alert>
-              <TextField
-                label="Expert"
-                fullWidth
-                variant="outlined"
-                value={expert}
-                onChange={e => setExpert(e.target.value)}
-                sx={{ mb: 2 }}
-              />
-              <TextField
-                label="Generated Summary"
-                multiline
-                rows={15}
-                fullWidth
-                variant="outlined"
-                value={summary}
-                onChange={e => setSummary(e.target.value)}
-              />
-              <Stack direction="row" spacing={2} justifyContent="flex-end" sx={{ mt: 3 }}>
-                <Button onClick={() => setStep('input')} color="inherit">Back</Button>
-                <Button variant="contained" onClick={approveAndSave} disabled={saving} startIcon={saving && <CircularProgress size={20} />}>
-                  {saving ? 'Saving...' : 'Approve & Save'}
+
+              <ExpertUserAutoComplete value={approver} onChange={setApprover} />
+            </Box>
+
+            {!submitted && (
+              <Box
+                display="flex"
+                justifyContent="flex-end"
+                gap={2}
+                mr={2}
+                mb={2}
+              >
+                <Button
+                  variant="contained"
+                  sx={{
+                    backgroundColor: `${theme.palette.success.main} !important`,
+                  }}
+                  onClick={submitForApproval}
+                  startIcon={submitting && <CircularProgress size={20} />}
+                >
+                  {submitting ? 'Submitting...' : 'Submit for Approval'}
                 </Button>
-              </Stack>
-            </>
-          )}
+              </Box>
+            )}
+
+            {submitted && (
+              <Box display="flex" justifyContent="flex-end" gap={2} mr={2}>
+                <Button
+                  variant="contained"
+                  sx={{
+                    backgroundColor: `${theme.palette.error.main} !important`,
+                  }}
+                  onClick={rejectSubmission}
+                >
+                  {rejecting ? 'Rejecting...' : 'Reject'}
+                </Button>
+
+                <Button
+                  variant="contained"
+                  sx={{
+                    backgroundColor: `${theme.palette.success.main} !important`,
+                  }}
+                  onClick={approveSubmission}
+                  startIcon={approving && <CircularProgress size={20} />}
+                >
+                  {approving ? 'Approving...' : 'Approve'}
+                </Button>
+              </Box>
+            )}
+          </Content>
+          {/* </Page> */}
         </Box>
       </Modal>
     </>

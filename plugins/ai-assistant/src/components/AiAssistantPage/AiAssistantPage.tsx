@@ -75,10 +75,6 @@ export const AiAssistantPage = () => {
     setConversationId(undefined);
   };
 
-  function navigateToFeedMePage(): void {
-    window.location.href = '/new-route';
-  }
-
   return (
     <>
       <Stack

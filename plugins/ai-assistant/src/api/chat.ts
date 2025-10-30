@@ -24,7 +24,13 @@ export type ChatApi = {
   addDocument: (data: {
     content: string;
     expert?: string;
-    approved: boolean;
+    approved: boolean | null;
+  }) => Promise<{ document: any }>;
+  updateDocument: (data: {
+    id: number;
+    // content: string;
+    // expert?: string;
+    approved: boolean | null;
   }) => Promise<{ document: any }>;
   summarizeContent: (data: {
     text?: string;
@@ -119,7 +125,9 @@ export const createChatService = ({
     if (!response.ok) {
       const error = await response.json();
       throw new Error(
-        `Failed to trigger ingestion: ${error.error?.message ?? response.statusText}`,
+        `Failed to trigger ingestion: ${
+          error.error?.message ?? response.statusText
+        }`,
       );
     }
 
@@ -141,6 +149,30 @@ export const createChatService = ({
       const error = await response.json();
       throw new Error(
         `Failed to add document: ${error.message ?? response.statusText}`,
+      );
+    }
+    return response.json();
+  };
+
+  const updateDocument: ChatApi['updateDocument'] = async data => {
+    const assistantBaseUrl = await discoveryApi.getBaseUrl('ai-assistant');
+
+    const response = await fetchApi.fetch(
+      `${assistantBaseUrl}/wikibot/documents`,
+      {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: data.id,
+          approved: data.approved,
+        }),
+      },
+    );
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(
+        `Failed to update document: ${error.message ?? response.statusText}`,
       );
     }
     return response.json();
@@ -173,5 +205,14 @@ export const createChatService = ({
     return response.json();
   };
 
-  return { getModels, getConversation, sendMessage, getConversations, triggerIngestion, addDocument, summarizeContent };
+  return {
+    getModels,
+    getConversation,
+    sendMessage,
+    getConversations,
+    triggerIngestion,
+    addDocument,
+    updateDocument,
+    summarizeContent,
+  };
 };

@@ -24,7 +24,9 @@ export function createWikibotTool(options: WikibotToolOptions) {
       schema: z.object({}),
       func: async () => {
         const toolLogger = logger.child({ tool: 'wikibot-big-brain' });
-        toolLogger.info(`Scanning files from ${folderPath} to save to database...`);
+        toolLogger.info(
+          `Scanning files from ${folderPath} to save to database...`,
+        );
         try {
           const files = fs.readdirSync(folderPath);
           const textFiles = files.filter(
@@ -37,17 +39,16 @@ export function createWikibotTool(options: WikibotToolOptions) {
 
           const db = await database.getClient();
           let processedCount = 0;
-          
+
           for (const file of textFiles) {
             const filePath = path.join(folderPath, file);
             try {
               const content = await fs.promises.readFile(filePath, 'utf-8');
 
-              await db('wikibot_documents')
-                .insert({
-                  content: content,
-                  approved: false,
-                });
+              await db('wikibot_documents').insert({
+                content: content,
+                approved: false,
+              });
 
               processedCount++;
               toolLogger.info(`Successfully saved content from ${filePath}`);
