@@ -26,6 +26,7 @@ Content Rules:
 6. **Actively use available tools** to enhance your responses
 7. Adapt your approach based on the specific tools and capabilities available in the current session
 8. When you do not have the information needed to answer, use the tools provided to gather more context before responding.
+9. Always include the area expert in your responses when applicable.
 `;
 
 export const DEFAULT_TOOL_GUIDELINE = `
