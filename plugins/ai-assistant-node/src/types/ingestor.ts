@@ -24,4 +24,5 @@ export type DataIngestionPipelineOptions = {
 
 export type DataIngestionPipeline = {
   start: () => Promise<void>;
+  trigger: (ingestorId?: string) => Promise<void>;
 };

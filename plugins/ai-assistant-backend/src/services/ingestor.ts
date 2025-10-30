@@ -38,17 +38,25 @@ export const createDataIngestionPipeline = ({
 
   const taskId = `ai-assistant.data-ingestion:start`;
 
-  const dataIngestion = async () => {
-    logger.info('Starting data ingestion...');
+  const dataIngestion = async (ingestorId?: string) => {
+    logger.info(
+      `Starting data ingestion... ${
+        ingestorId ? `for ingestor '${ingestorId}'` : 'for all ingestors'
+      }`,
+    );
 
-    if (ingestors.length === 0) {
+    const ingestorsToRun = ingestorId
+      ? ingestors.filter(i => i.id === ingestorId)
+      : ingestors;
+
+    if (ingestorsToRun.length === 0) {
       logger.warn('No ingestors available for data ingestion.');
       return;
     }
 
-    logger.info(`Ingestors available: ${ingestors.map(i => i.id).join(', ')}`);
+    logger.info(`Ingestors available: ${ingestorsToRun.map(i => i.id).join(', ')}`);
 
-    for await (const ingestor of ingestors) {
+    for await (const ingestor of ingestorsToRun) {
       logger.info(`Running ingestor: ${ingestor.id}`);
 
       const saveDocumentsBatch = async (documents: EmbeddingDocument[]) => {
@@ -106,11 +114,13 @@ export const createDataIngestionPipeline = ({
   const start = async () => {
     taskRunner.run({
       id: taskId,
-      fn: dataIngestion,
+      fn: () => dataIngestion(),
     });
   };
 
+
   return {
     start,
+    trigger: dataIngestion
   };
 };

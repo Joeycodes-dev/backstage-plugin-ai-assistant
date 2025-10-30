@@ -61,4 +61,16 @@ backend.add(
   ),
 );
 
+backend.add(
+  import(
+    '@sweetoburrito/backstage-plugin-ai-assistant-backend-module-tool-provider-wikibot'
+  ),
+);
+
+backend.add(
+  import(
+    '@sweetoburrito/backstage-plugin-ai-assistant-backend-module-tool-ingestor-wikibot'
+  ),
+);
+
 backend.start();

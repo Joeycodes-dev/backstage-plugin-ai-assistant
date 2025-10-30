@@ -4,6 +4,7 @@ export type CreateChatModelFunctionOptions = {
   apiKey: string;
   endpoint: string;
   modelName: string;
+  openAIApiVersion?: string;
 };
 
 export type CreateChatModelFunction = (

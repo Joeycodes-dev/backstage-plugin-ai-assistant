@@ -20,6 +20,7 @@ import AddIcon from '@mui/icons-material/Add';
 import PlattyIcon from '@mui/icons-material/Upload';
 import { useApi } from '@backstage/core-plugin-api';
 import { signalApiRef } from '@backstage/plugin-signals-react';
+import { FeedMeButton } from '../FeedMeButton';
 
 export const AiAssistantPage = () => {
   const chatApi = useApi(chatApiRef);
@@ -90,12 +91,7 @@ export const AiAssistantPage = () => {
         boxSizing="border-box"
       >
         <Stack direction="row" spacing={2} justifyContent="flex-end">
-          <Tooltip title="Feed Platty">
-            <IconButton onClick={navigateToFeedMePage}>
-              <PlattyIcon />
-            </IconButton>
-          </Tooltip>
-
+          <FeedMeButton />
           <Tooltip title="New Chat">
             <IconButton onClick={openNewChat}>
               <AddIcon />

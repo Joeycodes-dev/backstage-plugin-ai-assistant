@@ -20,6 +20,16 @@ export type ChatApi = {
     conversationId: string;
   }>;
   getConversations: () => Promise<Conversation[]>;
+  triggerIngestion: (ingestorId?: string) => Promise<{ message: string }>;
+  addDocument: (data: {
+    content: string;
+    expert?: string;
+    approved: boolean;
+  }) => Promise<{ document: any }>;
+  summarizeContent: (data: {
+    text?: string;
+    file?: File;
+  }) => Promise<{ summary: string }>;
 };
 
 type ChatApiOptions = {
@@ -94,5 +104,74 @@ export const createChatService = ({
     return data.conversations as Conversation[];
   };
 
-  return { getModels, getConversation, sendMessage, getConversations };
+  const triggerIngestion: ChatApi['triggerIngestion'] = async (
+    ingestorId?: string,
+  ) => {
+    const assistantBaseUrl = await discoveryApi.getBaseUrl('ai-assistant');
+    const response = await fetchApi.fetch(`${assistantBaseUrl}/ingest`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ ingestorId }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(
+        `Failed to trigger ingestion: ${error.error?.message ?? response.statusText}`,
+      );
+    }
+
+    return response.json();
+  };
+
+  const addDocument: ChatApi['addDocument'] = async data => {
+    const assistantBaseUrl = await discoveryApi.getBaseUrl('ai-assistant');
+    const response = await fetchApi.fetch(
+      `${assistantBaseUrl}/wikibot/documents`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      },
+    );
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(
+        `Failed to add document: ${error.message ?? response.statusText}`,
+      );
+    }
+    return response.json();
+  };
+
+  const summarizeContent: ChatApi['summarizeContent'] = async data => {
+    const assistantBaseUrl = await discoveryApi.getBaseUrl('ai-assistant');
+    const body = new FormData();
+    if (data.file) {
+      body.append('transcript', data.file);
+    }
+    if (data.text) {
+      body.append('content', data.text);
+    }
+
+    const response = await fetchApi.fetch(
+      `${assistantBaseUrl}/wikibot/summarize`,
+      {
+        method: 'POST',
+        body,
+      },
+    );
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(
+        `Failed to summarize content: ${error.message ?? response.statusText}`,
+      );
+    }
+    return response.json();
+  };
+
+  return { getModels, getConversation, sendMessage, getConversations, triggerIngestion, addDocument, summarizeContent };
 };
