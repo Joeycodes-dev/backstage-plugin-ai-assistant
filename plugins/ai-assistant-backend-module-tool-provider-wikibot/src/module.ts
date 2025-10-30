@@ -21,14 +21,14 @@ export const aiAssistantModuleToolProviderWikibot = createBackendModule({
         toolExtension.register(wikibotTool);
 
         // For testing: run the tool immediately on startup
-        logger.info('Running wikibot-big-brain tool on startup for testing...');
-        try {
-          // The tool's schema is an empty object, so we pass {} as the input.
-          const result = await wikibotTool.func({});
-          logger.info(`Wikibot tool run complete on startup: ${result}`);
-        } catch (error) {
-          logger.error('Error running wikibot tool on startup', error as Error);
-        }
+        // logger.info('Running wikibot-big-brain tool on startup for testing...');
+        // try {
+        //   // The tool's schema is an empty object, so we pass {} as the input.
+        //   const result = await wikibotTool.func({});
+        //   logger.info(`Wikibot tool run complete on startup: ${result}`);
+        // } catch (error) {
+        //   logger.error('Error running wikibot tool on startup', error as Error);
+        // }
       },
     });
   },

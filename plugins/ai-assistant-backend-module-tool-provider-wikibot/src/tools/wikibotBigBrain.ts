@@ -46,7 +46,7 @@ export function createWikibotTool(options: WikibotToolOptions) {
               await db('wikibot_documents')
                 .insert({
                   content: content,
-                  approved: true,
+                  approved: false,
                 });
 
               processedCount++;

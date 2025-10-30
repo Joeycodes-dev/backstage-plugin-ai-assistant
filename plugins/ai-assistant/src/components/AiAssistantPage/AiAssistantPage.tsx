@@ -85,8 +85,9 @@ export const AiAssistantPage = () => {
         maxHeight="100vh"
         boxSizing="border-box"
       >
-        <FeedMeButton />
+
         <Stack direction="row" spacing={2} justifyContent="flex-end">
+          <FeedMeButton />
           <Tooltip title="New Chat">
             <IconButton onClick={openNewChat}>
               <AddIcon />

@@ -53,6 +53,8 @@ catalog:
       target: ../../catalog.local-dev.yaml
 
 aiAssistant:
+  conversation:
+    summaryModel: 'gpt-5-mini'
   wikibot:
     folderPath: 'C:\\Users\\KutumeT\\Downloads\\test'
   storage:

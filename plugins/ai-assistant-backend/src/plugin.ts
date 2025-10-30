@@ -118,7 +118,7 @@ export const aiAssistantPlugin = createBackendPlugin({
           tools,
         });
 
-        httpRouter.use(await createRouter({ ...options, chat, dataIngestionTrigger: dataIngestionPipeline.trigger }));
+        httpRouter.use(await createRouter({ ...options, chat, dataIngestionTrigger: dataIngestionPipeline.trigger, models }));
         dataIngestionPipeline.start();
       },
     });
