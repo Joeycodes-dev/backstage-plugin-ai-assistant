@@ -256,7 +256,7 @@ export const FeedMeButton = () => {
               />
               {file && (
                 <Typography sx={{ mt: 1, fontStyle: 'italic' }}>
-                  Transcript summarized: {file.name}
+                  File uploaded: {file.name}
                 </Typography>
               )}
             </Box>
